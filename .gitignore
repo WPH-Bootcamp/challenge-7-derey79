@@ -1,5 +1,30 @@
+# node_modules/
+# dist/
+# *.log
+# data/
+# .DS_Store
+
+# Dependency folders (Never upload third-party packages)
 node_modules/
+jspm_packages/
+
+# TypeScript Build Artifacts (Only track raw source code files)
 dist/
-*.log
-data/
+out/
+build/
+*.tsbuildinfo
+
+# Local Database / JSON Storage File 
+# (Keeps your personal tasks private and prevents overwrite conflicts)
+todos.json
+
+# Debug Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+vitest-debug.log*
+
+# Operating System background files
 .DS_Store
+Thumbs.db
