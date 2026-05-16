@@ -47,7 +47,7 @@ export function isValidTodo(
   task: unknown,
   existingList: Todo[]
 ): ValidationResult {
-  // Rule 1: Must be a string
+  // task todo tidak menerima angka saja
   if (typeof task !== 'string') {
     return {
       isValid: false,
@@ -57,16 +57,19 @@ export function isValidTodo(
 
   const clearTask = task.trim();
 
-  // Rule 2: Must not be empty
+  // task todo tidak boleh kosong
   if (clearTask.length === 0) {
     return { isValid: false, message: 'Task cannot be empty.' };
   }
 
   if (!isNaN(Number(clearTask))) {
-    return { isValid: false, message: 'Task can not be a number' };
+    return {
+      isValid: false,
+      message: 'Task can not be a number, must be text',
+    };
   }
 
-  // Rule 3: Length must be greater than 3
+  // task todo harus lebih besar dari 3 karakter
   if (clearTask.length <= 3) {
     return {
       isValid: false,
@@ -74,6 +77,7 @@ export function isValidTodo(
     };
   }
 
+  // check validasi task apakah sudah ada
   const isDuplicate = existingList.some(
     (item) => item.task.toLowerCase() === clearTask.toLowerCase()
   );
@@ -87,6 +91,7 @@ export function isValidTodo(
   return { isValid: true };
 }
 
+//
 function isTodoItem(item: unknown): item is Todo {
   if (item === null || typeof item !== 'object') {
     return false;
@@ -100,11 +105,12 @@ function isTodoItem(item: unknown): item is Todo {
   );
 }
 
-// check is todo adalah arrat
+// check is todo adalah array
 export function isTodoArray(data: unknown): data is Todo[] {
   return Array.isArray(data) && data.every(isTodoItem);
 }
 
+// validasi untuk konfirmasiS
 export async function askConfirm(question: string): Promise<boolean> {
   while (true) {
     const answer = (await rl.question(question)).trim().toLowerCase();
@@ -145,15 +151,12 @@ function dateFormat(date: Date | string | null | undefined): string {
     return 'null';
   }
 
-  // 2. Safe Instantiation: Convert raw JSON strings into real Date instances
   const dateObj = typeof date === 'string' ? new Date(date) : date;
 
-  // 3. Guard Clause: Verify the instantiated Date object is physically valid
   if (isNaN(dateObj.getTime())) {
     return 'null';
   }
 
-  // 4. Safe Invocation: Execute the method on a verified native Date instance
   return dateObj
     .toLocaleDateString('en-GB', {
       timeZone: 'Asia/Jakarta', // Restricts calculation bounds to Indonesia
@@ -166,39 +169,3 @@ function dateFormat(date: Date | string | null | undefined): string {
     })
     .replace(',', '');
 }
-
-// export async function addTodo(Task: string): Promise<void> {
-//   const todos = readTodos();
-//   const newTodo: Todo = {
-//     id: Date.now(), //todos.length > 0 ? todos[todos.length - 1].id + 1 : 1,
-//     task: Task,
-//     isCompleted: false,
-//     dateCreate: new Date(),
-//   };
-//   //
-//   //saveTodos([...todos, newTodo]);
-//   console.log(`Added: "${Task}"`);
-// }
-
-// const listTodos = (): void => {
-//   const todos = readTodos();
-//   console.log('\n--- My Todo List ---');
-//   todos.forEach((t) => {
-//     console.log(`${t.id}. [${t.isCompleted ? 'x' : ' '}] ${t.task}`);
-//   });
-// };
-
-// const toggleTodo = (id: number): void => {
-//   const todos = readTodos();
-//   const updated = todos.map((t) =>
-//     t.id === id ? { ...t, isCompleted: !t.isCompleted } : t
-//   );
-//   saveTodos(updated);
-//   console.log(`Updated ID: ${id}`);
-// };
-
-// // --- Quick Test ---
-// addTodo('Buy coffee');
-// addTodo('Write TypeScript code');
-// toggleTodo(1);
-// listTodos();
