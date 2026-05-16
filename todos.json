@@ -1,62 +1,72 @@
 [
   {
-    "id": 1,
-    "task": "rrrr",
-    "isCompleted": false,
-    "dateCreate": "2026-05-14T03:59:42.396Z"
+    "id": 1778895688736,
+    "task": "Finishing Assignment 7",
+    "statusComplete": "done",
+    "dateCreate": "2026-05-16T01:41:28.736Z",
+    "dateComplete": "2026-05-16T02:27:28.580Z"
   },
   {
-    "id": 2,
-    "task": "makan",
-    "isCompleted": false,
-    "dateCreate": "2026-05-14T04:13:43.861Z"
+    "id": 1778895734165,
+    "task": "Cuci Londry",
+    "statusComplete": "active",
+    "dateCreate": "2026-05-16T01:42:14.165Z"
   },
   {
-    "id": 3,
-    "task": "makan",
-    "isCompleted": true,
-    "dateCreate": "2026-05-14T04:13:50.432Z"
+    "id": 1778895750243,
+    "task": "Cuci Mobil",
+    "statusComplete": "done",
+    "dateCreate": "2026-05-16T01:42:30.243Z",
+    "dateComplete": "2026-05-16T04:31:34.200Z"
   },
   {
-    "id": 4,
-    "task": "tidur",
-    "isCompleted": false,
-    "dateCreate": "2026-05-14T04:14:01.778Z"
+    "id": 1778895772439,
+    "task": "Lari 5K",
+    "statusComplete": "done",
+    "dateCreate": "2026-05-16T01:42:52.439Z",
+    "dateComplete": "2026-05-16T04:28:14.056Z"
   },
   {
-    "id": 5,
-    "task": "Makan siang di mana",
-    "isCompleted": false,
-    "dateCreate": "2026-05-14T04:52:37.549Z"
+    "id": 1778895789583,
+    "task": "Strength Train",
+    "statusComplete": "active",
+    "dateCreate": "2026-05-16T01:43:09.583Z"
   },
   {
-    "id": 6,
-    "task": "Sholat",
-    "isCompleted": false,
-    "dateCreate": "2026-05-14T04:56:31.529Z"
+    "id": 1778899739674,
+    "task": "Re-check Assignment 7",
+    "statusComplete": "active",
+    "dateCreate": "2026-05-16T02:48:59.674Z"
   },
   {
-    "id": 7,
-    "task": "",
-    "isCompleted": false,
-    "dateCreate": "2026-05-14T04:58:46.871Z"
+    "id": 1778900197185,
+    "task": "Watch Recording WPH",
+    "statusComplete": "active",
+    "dateCreate": "2026-05-16T02:56:37.185Z"
   },
   {
-    "id": 8,
-    "task": "Makan siang di Margo",
-    "isCompleted": false,
-    "dateCreate": "2026-05-14T05:02:03.150Z"
+    "id": 1778900252027,
+    "task": "Minum Obat",
+    "statusComplete": "done",
+    "dateCreate": "2026-05-16T02:57:32.027Z",
+    "dateComplete": "2026-05-16T04:27:41.833Z"
   },
   {
-    "id": 9,
-    "task": "sholat ashar",
-    "isCompleted": false,
-    "dateCreate": "2026-05-14T08:18:49.270Z"
+    "id": 1778905842746,
+    "task": "Strave Challenge May 10K",
+    "statusComplete": "active",
+    "dateCreate": "2026-05-16T04:30:42.746Z"
   },
   {
-    "id": 10,
-    "task": "tidur",
-    "isCompleted": false,
-    "dateCreate": "2026-05-14T08:18:58.450Z"
+    "id": 1778905860928,
+    "task": "Strava Challenge May 15K",
+    "statusComplete": "active",
+    "dateCreate": "2026-05-16T04:31:00.928Z"
+  },
+  {
+    "id": 1778905881414,
+    "task": "Makan Marugame Udon",
+    "statusComplete": "active",
+    "dateCreate": "2026-05-16T04:31:21.414Z"
   }
 ]
