@@ -2,10 +2,9 @@
 // import { stdin as input, stdout as output } from 'process';
 
 import { FILE_PATH, readTodos, saveTodos } from './storage';
-import { Todo, MenuItem } from './types';
+import { Todo, MenuItem, TodoStatus } from './types';
 import { rl, mainTodoApp } from '.';
-import { mainmenuList } from './utils';
-// import { promises } from 'dns';
+import { renderTodoList, isValidTodo, askConfirm, mainmenuList } from './utils';
 import * as fs from 'fs';
 
 // TODO: Import tipe-tipe yang sudah didefinisikan di types.ts
@@ -42,237 +41,221 @@ export async function showMenu(menu: MenuItem[]): Promise<void> {
   console.log('=====================================\n');
 }
 
-// export const runTodoApps = async () => {
-//   showMenu(mainmenuList);
-// };
-
-// export const runMenuApps = async () => {
-//   // Configures the promise-based input stream prompt
-//   showMenu(mainmenuList);
-// };
-
+// 1. Fungsi untuk menambah To Do baru, akan menambah di file todos.json
 export async function addTodo(): Promise<void> {
-  let addingMore = true;
-
-  while (addingMore) {
+  let addMoreTodo = true;
+  const todos = readTodos();
+  while (addMoreTodo) {
     let task = '';
 
-    while (true) {
-      const inputTask = await rl.question('\nEnter your todo task: ');
-      task = inputTask.trim();
-
-      if (task.length > 0) {
-        break;
+    let isInputValid = false;
+    while (!isInputValid) {
+      task = await rl.question('\nEnter your todo task: ');
+      const result = isValidTodo(task, todos);
+      if (result.isValid) {
+        isInputValid = true;
+      } else {
+        console.log(`Error: ${result.message}`);
       }
-      console.log('Error: Task cannot be empty. Please try again.');
     }
 
-    // todoList.push({ id: nextId++, task });
-    // const todos = readTodos();
+    //
     const newTodo: Todo = {
-      id: Date.now(), //todos.length > 0 ? todos[todos.length - 1].id + 1 : 1,
+      id: Date.now(),
       task: task,
-      isCompleted: false,
+      statusComplete: 'active',
       dateCreate: new Date(),
     };
 
-    // saveTodos([...todos, newTodo]);
-    console.log(`Added: "${task}"`);
-    // console.log('Todo added successfully!');
+    saveTodos([...todos, newTodo]);
+    renderTodoList([newTodo], 'New Add Task');
+    // konfirm apakah mau menambah task ?
+    const askMore = await rl.question(
+      'Do you want to add another todo? (y/n): '
+    );
 
-    while (true) {
-      const reply = await rl.question('Do you want to add more todo? (y/n): ');
-      const sanitizedReply = reply.trim().toLowerCase();
-
-      if (sanitizedReply === 'y') {
-        break;
-      } else if (sanitizedReply === 'n') {
-        addingMore = false;
-        showMenu(mainmenuList);
-        mainTodoApp();
-        break;
-      } else {
-        console.log('Invalid input. Please enter "y" for yes or "n" for no.');
-      }
+    if (askMore.trim().toLowerCase() === 'y') {
+      await addTodo();
+    } else {
+      mainTodoApp();
     }
   }
-  // const todos = readTodos();
-  // const newTodo: Todo = {
-  //   id: Date.now(), //todos.length > 0 ? todos[todos.length - 1].id + 1 : 1,
-  //   task: Task,
-  //   isCompleted: false,
-  //   dateCreate: new Date(),
-  // };
-  // //
-  // //saveTodos([...todos, newTodo]);
-  // console.log(`Added: "${Task}"`);
 }
-
-// const listTodos = (): void => {
-//   const todos = readTodos();
-//   console.log('\n--- My Todo List ---');
-//   todos.forEach((t) => {
-//     console.log(`${t.id}. [${t.isCompleted ? 'x' : ' '}] ${t.task}`);
-//   });
-// };
 
 // 2. fungsi untuk menandai To-Do sebagai selesai
 export async function markTodo(): Promise<void> {
-  if (!fs.existsSync(FILE_PATH)) {
-    console.log('\nError: No todo list found. Add a todo first.');
-    return;
-  }
-  const fileData = fs.readFileSync(FILE_PATH, 'utf-8');
-  const todoList: Todo[] = JSON.parse(fileData);
+  const todos = readTodos();
 
-  if (todoList.length === 0) {
-    console.log('\nError: Your todo list is empty.');
+  // 1. Filter out only pending tasks ('active')
+  const pendingTodos = todos.filter((item) => item.statusComplete === 'active');
+
+  if (pendingTodos.length === 0) {
+    console.log('No pending task, all todo already done!');
+    mainTodoApp();
     return;
   }
+
+  // 2. Render the list (User sees 1, 2, 3... corresponding to the pending list)
+  renderTodoList(pendingTodos, 'Select Todo for Mark');
+
   const inputId = await rl.question(
-    '\nEnter the Todo ID to mark as complete: '
+    '\nEnter the display No to mark as complete (or press Enter/"c" to cancel): '
   );
-  const targetId = parseInt(inputId.trim(), 10);
+  const inputTrim = inputId.trim().toLowerCase();
 
-  if (isNaN(targetId)) {
-    console.log('Error: Please enter a valid numeric ID.');
+  // 3. Handle cancel paths safely
+  if (inputTrim === '' || inputTrim === 'c') {
+    console.log('Mark operation cancelled.');
+    mainTodoApp();
     return;
   }
 
-  const todoItem = todoList.find((item) => item.id === targetId);
+  const displayNo = parseInt(inputTrim, 10);
+  const targetArrayIndex = displayNo - 1;
 
-  if (!todoItem) {
-    console.log(`Error: Todo with ID ${targetId} not found.`);
+  // 4. Validate that the input matches the visible list boundaries
+  if (
+    isNaN(displayNo) ||
+    targetArrayIndex < 0 ||
+    targetArrayIndex >= pendingTodos.length
+  ) {
+    console.log(
+      'Error: Invalid selection. Please enter a valid number from the list.'
+    );
+    mainTodoApp();
     return;
   }
-  if (todoItem.isCompleted) {
-    console.log(`Todo "${todoItem.task}" is already marked as completed.`);
-    return;
+
+  // 5. Safely grab the selected task from the visible pending list
+  const selectedTask = pendingTodos[targetArrayIndex];
+
+  // 6. Locate its matching pointer in the master database array using its ID
+  const masterItem = todos.find((item) => item.id === selectedTask.id);
+
+  if (masterItem) {
+    // Clean extracted ternary pattern
+    masterItem.statusComplete =
+      masterItem.statusComplete === 'active' ? 'done' : 'active';
+
+    // Optional property support (if your type interface includes a completed date)
+    (masterItem as any).dateComplete = new Date().toISOString();
+
+    saveTodos(todos);
+    console.log(`Success: "${masterItem.task}" has been marked as complete!`);
   }
 
-  todoItem.isCompleted = true;
-  fs.writeFileSync(FILE_PATH, JSON.stringify(todoList, null, 2), 'utf-8');
-
-  console.log(`Success: "${todoItem.task}" has been marked as complete!`);
+  mainTodoApp();
 }
 
+// 03. Fungsi untuk menghapus To Do dari file todos.json
 export async function deleteTodo(): Promise<void> {
   let deletingMore = true;
 
   while (deletingMore) {
-    // 1. Guard clause: Ensure data file contains records
-    if (!fs.existsSync(FILE_PATH)) {
-      console.log('\nError: No todo list found.');
-      break;
+    const todos = readTodos();
+
+    if (todos.length === 0) {
+      console.log('\nYour todo list is currently empty.');
+      mainTodoApp();
+      return;
     }
 
-    const fileData = fs.readFileSync(FILE_PATH, 'utf-8');
-    const todoList: Todo[] = JSON.parse(fileData);
+    // 1. Render list (Indices 1, 2, 3... are printed on screen)
+    renderTodoList(todos, 'Select Todo for Delete');
 
-    if (todoList.length === 0) {
-      console.log('\nError: Your todo list is empty.');
-      break;
+    const inputId = await rl.question(
+      '\nEnter the display No to delete (or press Enter/"c" to cancel): '
+    );
+    const inputTrim = inputId.trim().toLowerCase();
+
+    if (inputTrim === '' || inputTrim === 'c') {
+      console.log('Delete operation cancelled.');
+      mainTodoApp();
+      return;
     }
 
-    // 2. Select targeted element
-    const inputId = await rl.question('\nEnter the Todo ID to delete: ');
-    const targetId = parseInt(inputId.trim(), 10);
+    const displayNo = parseInt(inputTrim, 10);
+    // 2. Convert human display number to computer array index position
+    const targetArrayIndex = displayNo - 1;
 
-    if (isNaN(targetId)) {
-      console.log('Error: Please enter a valid numeric ID.');
-      continue; // Restarts current block to ask for ID again
-    }
-
-    listTodos();
-    const itemIndex = todoList.findIndex((item) => item.id === targetId);
-    if (itemIndex === -1) {
-      console.log(`Error: Todo with ID ${targetId} not found.`);
+    // Validate if selection is safely within the array bounds
+    if (
+      isNaN(displayNo) ||
+      targetArrayIndex < 0 ||
+      targetArrayIndex >= todos.length
+    ) {
+      console.log(
+        'Error: Invalid selection. Please enter a valid number from the list.'
+      );
       continue;
     }
 
-    const targetTask = todoList[itemIndex].task;
+    const targetItem = todos[targetArrayIndex];
 
-    // 3. Prompt Action Confirmation Step
-    let processDeletion = false;
-    while (true) {
-      const confirm = await rl.question(
-        `Are you sure you want to delete "${targetTask}"? (y/n): `
-      );
-      const answer = confirm.trim().toLowerCase();
+    // 3. Confirm Deletion using helper
+    const processDeletion = await askConfirm(
+      `Are you sure you want to delete "${targetItem.task}"? (y/n): `
+    );
 
-      if (answer === 'y') {
-        processDeletion = true;
-        break;
-      } else if (answer === 'n') {
-        console.log('Deletion canceled.');
-        break;
-      }
-      console.log('Invalid input. Please enter "y" or "n".');
-    }
-
-    // 4. Update file if validated
     if (processDeletion) {
-      todoList.splice(itemIndex, 1);
-
-      // Re-index remaining array keys for display uniformity
-      todoList.forEach((todo, index) => {
-        todo.id = index + 1;
-      });
-
-      fs.writeFileSync(FILE_PATH, JSON.stringify(todoList, null, 2), 'utf-8');
-      console.log(`Success: "${targetTask}" has been deleted.`);
+      // Remove item cleanly using its array index position
+      todos.splice(targetArrayIndex, 1);
+      saveTodos(todos);
+      console.log(`Success: "${targetItem.task}" has been deleted.`);
+    } else {
+      console.log('Deletion canceled.');
     }
 
-    // 5. Prompt Iteration Continuity Step
-    while (true) {
-      const askMore = await rl.question('\nDelete another todo list? (y/n): ');
-      const answerMore = askMore.trim().toLowerCase();
+    // 4. Check Continuity using helper
+    const deleteAnother = await askConfirm(
+      '\nDelete another task list? (y/n): '
+    );
 
-      if (answerMore === 'y') {
-        // Keeps loop context active to run another deletion check
-        break;
-      } else if (answerMore === 'n') {
-        deletingMore = false; // Gracefully breaks execution block
-        break;
-      }
-      console.log('Invalid input. Please enter "y" or "n".');
+    if (!deleteAnother) {
+      deletingMore = false;
+      mainTodoApp();
     }
   }
 }
 
-// list to do
-export async function listTodos(): Promise<void> {
+// 04. Fungsi untuk menampilkan semua To-Do
+export function listTodos(): void {
   const todos = readTodos();
-
-  console.log('\n--- Your Todo List ---');
-
-  if (todos.length === 0) {
-    console.log('No todos found.');
-  } else {
-    todos.forEach((t, index) => {
-      let resIndex = String(index + 1).padStart(2, '0');
-      let status = t.isCompleted ? 'DONE' : 'ACTIVE';
-
-      const dateObj = new Date(t.dateCreate);
-
-      console.log(
-        `${resIndex}. [${status}] ${t.task.padEnd(30)} ${dateFormat(dateObj)}`
-      );
-    });
-  }
-  console.log('----------------------\n');
-  await rl.question('Press Enter to return to the main menu...');
+  renderTodoList(todos, 'List Todo');
+  // await rl.question('Press Enter to return to the main menu...');
 }
 
-function dateFormat(date: Date) {
-  return date
-    .toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric', // '2-digit' changes "2026" to "26", numeric for full 2026
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false, // Uses 24-hour time clock representation
-    })
-    .replace(',', '');
+// 05. Fungsi untuk mencari To-Do
+export async function searchTodo(): Promise<void> {
+  const searchKeyword = await rl.question('\nEnter search keyword : ');
+  const keywordTrim = searchKeyword.trim();
+  if (keywordTrim.length === 0) {
+    console.log('keyword is empty');
+  }
+
+  const todos = readTodos();
+  // Filter matches using substring match
+  const matches = todos.filter((item) =>
+    item.task.toLowerCase().includes(keywordTrim.toLowerCase())
+  );
+
+  // console.log('\n================== Search Results ====================');
+  if (matches.length === 0) {
+    console.log(`No entries match your keyword: "${keywordTrim}"`);
+  } else {
+    console.log(
+      `\nFound ${matches.length} result(s) for keyword "'${keywordTrim}'"`
+    );
+    // call fungsi render to do list
+    renderTodoList(matches, `List of Result(s)`);
+    // matches.forEach((item, index) => {
+    //   let noIndex = String(index + 1).padStart(2, '0');
+    //   let status = item.isCompleted ? 'DONE' : 'ACTIVE';
+    //   let statusBlock = `[${status}]`.padEnd(10);
+    //   console.log(
+    //     ` ${noIndex}. [Id: ${item.id}] ${statusBlock} ${item.task.padEnd(30)} `
+    //   );
+    // });
+  }
+  console.log('\n');
 }
