@@ -11,8 +11,8 @@ export interface Todo {
   id: number; //id berupa number
   task: string; //berisi text todo
   statusComplete: TodoStatus;
-  dateCreate: Date;
-  dateComplete?: Date;
+  dateCreate: string;
+  dateComplete?: string;
 }
 
 // type for main menu
