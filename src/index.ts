@@ -7,6 +7,7 @@ import {
   markTodo,
   listTodos,
   deleteTodo,
+  searchTodo,
 } from './todoService';
 import { mainmenuList } from './utils';
 // TODO: Import readline untuk membaca input dari command line
@@ -33,16 +34,20 @@ import { mainmenuList } from './utils';
 // TODO: Jalankan fungsi main
 console.log('Welcome to TypeScript To-Do App!');
 console.log('Start building your app here...');
-const showDate: string = new Date().toDateString();
-console.log(`\nToday : ${showDate}`);
-// function untuk memanggil opsi menu
-showMenu(mainmenuList);
 
 export const rl = readline.createInterface({ input, output });
 
+// exit handler supaya tidak menampilkan seperti error
+rl.on('SIGINT', () => {
+  console.log('\n\nOperation cancelled. Goodbye!');
+  rl.close();
+  process.exit(0);
+});
+
 export const mainTodoApp = async () => {
-  // Configures the promise-based input stream prompt
-  // const rl = readline.createInterface({ input, output });
+  const showDate: string = new Date().toDateString();
+  console.log(`\nToday : ${showDate}`);
+  showMenu(mainmenuList);
   let isProgramRun = true;
   // show main menu
 
@@ -68,17 +73,18 @@ export const mainTodoApp = async () => {
         await listTodos();
         break;
       }
-
+      case '5': {
+        await searchTodo();
+        break;
+      }
       case '6': {
         console.log('Exiting...');
         isProgramRun = false;
+        rl.close();
         break;
       }
     }
   }
-
-  // Closes the input streams safely to prevent terminal hanging
-  rl.close();
 };
 
 mainTodoApp();
