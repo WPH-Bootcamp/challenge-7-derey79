@@ -35,21 +35,15 @@
   {
     "id": 1778899739674,
     "task": "Re-check Assignment 7",
-    "statusComplete": "active",
-    "dateCreate": "2026-05-16T02:48:59.674Z"
+    "statusComplete": "done",
+    "dateCreate": "2026-05-16T02:48:59.674Z",
+    "dateComplete": "2026-05-16T06:47:52.849Z"
   },
   {
     "id": 1778900197185,
     "task": "Watch Recording WPH",
     "statusComplete": "active",
     "dateCreate": "2026-05-16T02:56:37.185Z"
-  },
-  {
-    "id": 1778900252027,
-    "task": "Minum Obat",
-    "statusComplete": "done",
-    "dateCreate": "2026-05-16T02:57:32.027Z",
-    "dateComplete": "2026-05-16T04:27:41.833Z"
   },
   {
     "id": 1778905842746,
@@ -68,5 +62,30 @@
     "task": "Makan Marugame Udon",
     "statusComplete": "active",
     "dateCreate": "2026-05-16T04:31:21.414Z"
+  },
+  {
+    "id": 1778908751928,
+    "task": "Beli Martabak",
+    "statusComplete": "done",
+    "dateCreate": "2026-05-16T05:19:11.928Z",
+    "dateComplete": "2026-05-16T05:20:27.780Z"
+  },
+  {
+    "id": 1778908769335,
+    "task": "Testing Aplikasi",
+    "statusComplete": "active",
+    "dateCreate": "2026-05-16T05:19:29.335Z"
+  },
+  {
+    "id": 1778914027795,
+    "task": "Check App before Push",
+    "statusComplete": "active",
+    "dateCreate": "2026-05-16T06:47:07.795Z"
+  },
+  {
+    "id": 1778914057761,
+    "task": "Pull Request",
+    "statusComplete": "active",
+    "dateCreate": "2026-05-16T06:47:37.761Z"
   }
 ]
