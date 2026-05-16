@@ -7,16 +7,10 @@
 
 // TODO: Buat tipe untuk fungsi-fungsi yang akan digunakan
 
-// interface Todo {
-//   id: number;
-//   title: string;
-//   isComplete?: boolean;
-// }
-
 export interface Todo {
-  id: number;
-  task: string;
-  isCompleted: boolean;
+  id: number; //id berupa number
+  task: string; //berisi text todo
+  statusComplete: TodoStatus;
   dateCreate: Date;
   dateComplete?: Date;
 }
@@ -25,5 +19,6 @@ export interface Todo {
 export interface MenuItem {
   id: number;
   menuTitle: string;
-  // isMandatory: boolean;
 }
+
+export type TodoStatus = 'active' | 'done';
