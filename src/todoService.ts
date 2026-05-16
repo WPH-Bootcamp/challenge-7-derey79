@@ -50,7 +50,7 @@ export async function addTodo(): Promise<void> {
 
     let isInputValid = false;
     while (!isInputValid) {
-      task = await rl.question('\nEnter your todo task: ');
+      task = await rl.question('\nEnter new todo task : ');
       const result = isValidTodo(task, todos);
       if (result.isValid) {
         isInputValid = true;
@@ -64,19 +64,19 @@ export async function addTodo(): Promise<void> {
       id: Date.now(),
       task: task,
       statusComplete: 'active',
-      dateCreate: new Date(),
+      dateCreate: new Date().toISOString(),
     };
 
     saveTodos([...todos, newTodo]);
     renderTodoList([newTodo], 'New Add Task');
+
     // konfirm apakah mau menambah task ?
-    const askMore = await rl.question(
-      'Do you want to add another todo? (y/n): '
+    const addAnother = await askConfirm(
+      '\nDo you want to add another todo? (y/n): '
     );
 
-    if (askMore.trim().toLowerCase() === 'y') {
-      await addTodo();
-    } else {
+    if (!addAnother) {
+      addMoreTodo = false;
       mainTodoApp();
     }
   }
@@ -95,7 +95,7 @@ export async function markTodo(): Promise<void> {
     return;
   }
 
-  // 2. Render the list (User sees 1, 2, 3... corresponding to the pending list)
+  // render list
   renderTodoList(pendingTodos, 'Select Todo for Mark');
 
   const inputId = await rl.question(
@@ -103,7 +103,7 @@ export async function markTodo(): Promise<void> {
   );
   const inputTrim = inputId.trim().toLowerCase();
 
-  // 3. Handle cancel paths safely
+  // handle kalau cancel
   if (inputTrim === '' || inputTrim === 'c') {
     console.log('Mark operation cancelled.');
     mainTodoApp();
@@ -113,7 +113,7 @@ export async function markTodo(): Promise<void> {
   const displayNo = parseInt(inputTrim, 10);
   const targetArrayIndex = displayNo - 1;
 
-  // 4. Validate that the input matches the visible list boundaries
+  // validasi untuk range nomor index di display
   if (
     isNaN(displayNo) ||
     targetArrayIndex < 0 ||
@@ -126,19 +126,14 @@ export async function markTodo(): Promise<void> {
     return;
   }
 
-  // 5. Safely grab the selected task from the visible pending list
+  // pilih data yang sesuai dengan nomor index
   const selectedTask = pendingTodos[targetArrayIndex];
-
-  // 6. Locate its matching pointer in the master database array using its ID
   const masterItem = todos.find((item) => item.id === selectedTask.id);
 
   if (masterItem) {
-    // Clean extracted ternary pattern
     masterItem.statusComplete =
       masterItem.statusComplete === 'active' ? 'done' : 'active';
-
-    // Optional property support (if your type interface includes a completed date)
-    (masterItem as any).dateComplete = new Date().toISOString();
+    masterItem.dateComplete = new Date().toISOString();
 
     saveTodos(todos);
     console.log(`Success: "${masterItem.task}" has been marked as complete!`);
@@ -160,7 +155,7 @@ export async function deleteTodo(): Promise<void> {
       return;
     }
 
-    // 1. Render list (Indices 1, 2, 3... are printed on screen)
+    // 1. Render list todo yang akan di delete
     renderTodoList(todos, 'Select Todo for Delete');
 
     const inputId = await rl.question(
@@ -175,10 +170,9 @@ export async function deleteTodo(): Promise<void> {
     }
 
     const displayNo = parseInt(inputTrim, 10);
-    // 2. Convert human display number to computer array index position
     const targetArrayIndex = displayNo - 1;
 
-    // Validate if selection is safely within the array bounds
+    // validasi nomor index di list
     if (
       isNaN(displayNo) ||
       targetArrayIndex < 0 ||
@@ -192,13 +186,12 @@ export async function deleteTodo(): Promise<void> {
 
     const targetItem = todos[targetArrayIndex];
 
-    // 3. Confirm Deletion using helper
+    // konfirmasi sebelum delete
     const processDeletion = await askConfirm(
       `Are you sure you want to delete "${targetItem.task}"? (y/n): `
     );
 
     if (processDeletion) {
-      // Remove item cleanly using its array index position
       todos.splice(targetArrayIndex, 1);
       saveTodos(todos);
       console.log(`Success: "${targetItem.task}" has been deleted.`);
@@ -206,7 +199,7 @@ export async function deleteTodo(): Promise<void> {
       console.log('Deletion canceled.');
     }
 
-    // 4. Check Continuity using helper
+    // konfirmasi apakah melakukan delete lagi?
     const deleteAnother = await askConfirm(
       '\nDelete another task list? (y/n): '
     );
@@ -221,41 +214,49 @@ export async function deleteTodo(): Promise<void> {
 // 04. Fungsi untuk menampilkan semua To-Do
 export function listTodos(): void {
   const todos = readTodos();
-  renderTodoList(todos, 'List Todo');
-  // await rl.question('Press Enter to return to the main menu...');
+  renderTodoList(todos, 'List All Todo Task');
+  mainTodoApp();
 }
 
 // 05. Fungsi untuk mencari To-Do
 export async function searchTodo(): Promise<void> {
-  const searchKeyword = await rl.question('\nEnter search keyword : ');
-  const keywordTrim = searchKeyword.trim();
-  if (keywordTrim.length === 0) {
-    console.log('keyword is empty');
-  }
+  let searchingMore = true;
 
-  const todos = readTodos();
-  // Filter matches using substring match
-  const matches = todos.filter((item) =>
-    item.task.toLowerCase().includes(keywordTrim.toLowerCase())
-  );
+  while (searchingMore) {
+    const searchKeyword = await rl.question('\nEnter search keyword: ');
+    const keywordTrim = searchKeyword.trim().toLowerCase();
 
-  // console.log('\n================== Search Results ====================');
-  if (matches.length === 0) {
-    console.log(`No entries match your keyword: "${keywordTrim}"`);
-  } else {
-    console.log(
-      `\nFound ${matches.length} result(s) for keyword "'${keywordTrim}'"`
+    // 1. validasi apakah keyword null
+    if (keywordTrim.length === 0) {
+      console.log('Error: Search keyword cannot be empty.');
+      continue; // Restarts the search block immediately
+    }
+
+    const todos = readTodos();
+
+    // 2. filter array berdasarkan keyword
+    const matches = todos.filter((item) =>
+      item.task.toLowerCase().includes(keywordTrim)
     );
-    // call fungsi render to do list
-    renderTodoList(matches, `List of Result(s)`);
-    // matches.forEach((item, index) => {
-    //   let noIndex = String(index + 1).padStart(2, '0');
-    //   let status = item.isCompleted ? 'DONE' : 'ACTIVE';
-    //   let statusBlock = `[${status}]`.padEnd(10);
-    //   console.log(
-    //     ` ${noIndex}. [Id: ${item.id}] ${statusBlock} ${item.task.padEnd(30)} `
-    //   );
-    // });
+
+    // 3. Render tampilan list ToDo
+    if (matches.length === 0) {
+      console.log(`No entries match your keyword: "${searchKeyword.trim()}"`);
+    } else {
+      console.log(
+        `\nFound ${matches.length} result(s) for keyword "${searchKeyword.trim()}"`
+      );
+      renderTodoList(matches, 'List of Result(s)');
+    }
+
+    // 4. konfirmasi apakah mencari berdasarkan keyword lain
+    const searchAnother = await askConfirm(
+      '\nDo you want to search another task? (y/n): '
+    );
+
+    if (!searchAnother) {
+      searchingMore = false;
+      mainTodoApp();
+    }
   }
-  console.log('\n');
 }
