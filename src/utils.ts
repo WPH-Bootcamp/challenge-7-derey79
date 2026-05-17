@@ -134,7 +134,7 @@ export function renderTodoList(todo: Todo[], title: string): void {
       const dateCreated = dateFormat(t.dateCreate);
 
       const dateCompleteStr = t.dateComplete
-        ? `(Complete Date : ${dateFormat(t.dateComplete)})`
+        ? `(Completed : ${dateFormat(t.dateComplete)})`
         : '';
 
       console.log(

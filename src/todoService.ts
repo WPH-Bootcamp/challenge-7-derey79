@@ -212,10 +212,21 @@ export async function deleteTodo(): Promise<void> {
 }
 
 // 04. Fungsi untuk menampilkan semua To-Do
-export function listTodos(): void {
-  const todos = readTodos();
-  renderTodoList(todos, 'List All Todo Task');
-  mainTodoApp();
+export async function listTodos(): Promise<void> {
+  let listScreen = true;
+  while (listScreen) {
+    const todos = readTodos();
+    renderTodoList(todos, 'List All Todo Task');
+
+    const exitListScreen = await rl.question(
+      '\nDo you want to exit to Main Menu? (y): '
+    );
+
+    if (exitListScreen.toLowerCase() === 'y') {
+      listScreen = false;
+      mainTodoApp();
+    }
+  }
 }
 
 // 05. Fungsi untuk mencari To-Do
@@ -229,7 +240,7 @@ export async function searchTodo(): Promise<void> {
     // 1. validasi apakah keyword null
     if (keywordTrim.length === 0) {
       console.log('Error: Search keyword cannot be empty.');
-      continue; // Restarts the search block immediately
+      continue; //
     }
 
     const todos = readTodos();
